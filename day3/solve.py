@@ -11,10 +11,7 @@ def is_symbol(char):
 
 def read_input(input_file) -> list[str]:
     with open(input_file, "r") as f:
-        return [
-            line.strip()
-            for line in f.readlines()
-        ]
+        return [line.strip() for line in f.readlines()]
 
 
 def parse_args():
