@@ -1,6 +1,8 @@
 import argparse
 import pytest
 
+from collections import defaultdict
+
 
 def parse_line(line) -> (set[int], set[int]):
     card, remainder = line.split(': ')
@@ -32,17 +34,42 @@ def parse_args():
     return parser.parse_args()
 
 
+def number_of_winners(winning_nos, my_nos):
+    return len(my_nos.intersection(winning_nos))
+
+
 def solution_one(data):
     ttl_value = 0
     for line in data:
         winning_nos, my_nos = parse_line(line)
-        my_winning_nos = my_nos.intersection(winning_nos)
-        if len(my_winning_nos) == 0:
+        winners = number_of_winners(winning_nos, my_nos)
+        if winners == 0:
             continue
-        # doubling every time is the same as 2 ^ n - 1
-        value = 2 ** (len(my_winning_nos) - 1)
+        # doubling every time is the same as 2 ^ n - 1 (except 0)
+        value = 2 ** (winners - 1)
         ttl_value += value
     return ttl_value
+
+
+def solution_two(data):
+    copy_counter = defaultdict(int)
+    for idx in range(0, len(data)):
+        line = data[idx]
+        winning_nos, my_nos = parse_line(line)
+        winners = number_of_winners(winning_nos, my_nos)
+        if winners == 0:
+            continue
+        # add copies of subsequent cards for each winner
+        for i in range(idx + 1, idx + 1 + winners):
+            # add one + the number of copies we've got of this card
+            num_copies = 1 + copy_counter[idx]
+            copy_counter[i] += num_copies
+    return sum(copy_counter.values()) + len(data)  # add the number of non-copies
+
+
+def test_solution_two():
+    data = read_input('test_input.txt')
+    assert solution_two(data) == 30
 
 
 def test_solution_one():
@@ -57,6 +84,7 @@ def read_input(input_file):
 
 MODE_MAP = {
     1: solution_one,
+    2: solution_two,
 }
 
 def main():
