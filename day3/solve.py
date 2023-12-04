@@ -73,7 +73,7 @@ def get_next_number(input_line: str, start_search_at: int) -> (str, int, int):
         tuple of:
             number string (no guarantee it's a part number!)
             start column
-            end column (inclusive)
+            index to start next search
     """
     # record boundaries of the next part number we find
     start_col = None
@@ -100,9 +100,13 @@ def get_next_number(input_line: str, start_search_at: int) -> (str, int, int):
                 break
 
     # only return part number and column if we actually found something
-    if start_col is not None and end_col is not None:
+    if start_col is not None:
+        # edge case: number is at the end of the line, so set end pos
+        if end_col is None:
+          end_col = start_col + 1
         number = input_line[start_col:end_col]
         return number, start_col, end_col
+
     return None, None, None
 
 
@@ -125,6 +129,15 @@ def test_get_next_number():
     assert part_number == "510"
     assert start_col == 5
     assert end_col == 8
+    single_end_input_str = '.1.1'
+    part_number, start_col, end_col = get_next_number(single_end_input_str, 0)
+    assert part_number == "1"
+    assert start_col == 1
+    assert end_col == 2
+    part_number, start_col, end_col = get_next_number(single_end_input_str, end_col)
+    assert part_number == "1"
+    assert start_col == 3
+    assert end_col == 4
 
 
 def part_one_solution(data):
@@ -152,7 +165,8 @@ def part_one_solution(data):
 def test_part_one_solution():
     data = read_input("test_input.txt")
     assert part_one_solution(data) == 4361 + 912  # I added 912 as an edge case
-    data = read_input("test_input2.txt") == 413
+    # reddit data
+    data = read_input("test_input2.txt") == 413 + 1  # I added 1 as an edge case
 
 
 def main():
