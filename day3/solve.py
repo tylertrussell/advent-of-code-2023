@@ -9,9 +9,12 @@ def is_symbol(char):
     return char != "." and not char.isnumeric() and not char.isalpha()
 
 
-def read_input(input_file):
+def read_input(input_file) -> list[str]:
     with open(input_file, "r") as f:
-        return f.readlines()
+        return [
+            line.strip()
+            for line in f.readlines()
+        ]
 
 
 def parse_args():
@@ -45,7 +48,6 @@ def is_part_number(row: int, col: int, length: int, data: list) -> bool:
                 continue
             char = data[target_ridx][target_cidx]
             if is_symbol(char):
-                print(f"symbol {char} at delta {row_d},{col_d}")
                 return True
     return False
 
@@ -141,7 +143,6 @@ def part_one_solution(data):
 
     for ridx in range(0, len(data)):
         line = data[ridx]
-        print(line)
 
         # find each number in the row and check if its a part number
         search_col = 0
@@ -152,18 +153,15 @@ def part_one_solution(data):
                 ridx, start_col, len(number_str), data
             ):
                 part_numbers.append(int(number_str))
-                print(f"part number {number_str} at pos {start_col}")
-            else:
-                print(f"not a part number: {number_str}")
 
     return sum(part_numbers)
 
 
 def test_part_one_solution():
     data = read_input("test_input.txt")
-    assert part_one_solution(data) == 4361 + 912  # I added 912 as an edge case
+    assert part_one_solution(data) == 4361 + 592 + 912  # added edge cases
     # reddit data
-    data = read_input("test_input2.txt") == 413 + 1  # I added 1 as an edge case
+    data = read_input("test_input2.txt") == 413 + 1  # added edge cases
 
 
 def main():
