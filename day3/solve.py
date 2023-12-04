@@ -2,30 +2,21 @@ import argparse
 
 
 # (horizontal, vertical)
-VALID_DELTAS = [
-    (1, -1),
-    (1, 0),
-    (1, 1),
-    (0, -1),
-    (0, 1),
-    (-1, -1),
-    (-1, 0),
-    (-1, 1)
-]
+VALID_DELTAS = [(1, -1), (1, 0), (1, 1), (0, -1), (0, 1), (-1, -1), (-1, 0), (-1, 1)]
 
 
 def is_symbol(char):
-    return char != '.' and not char.isnumeric() and not char.isalpha()
+    return char != "." and not char.isnumeric() and not char.isalpha()
 
 
 def read_input(input_file):
-    with open(input_file, 'r') as f:
+    with open(input_file, "r") as f:
         return f.readlines()
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description='Solve the problem')
-    parser.add_argument('input_file', type=str, help='input file')
+    parser = argparse.ArgumentParser(description="Solve the problem")
+    parser.add_argument("input_file", type=str, help="input file")
     args = parser.parse_args()
     return args
 
@@ -45,7 +36,12 @@ def is_part_number(row: int, col: int, length: int, data: list) -> bool:
         for row_d, col_d in VALID_DELTAS:
             target_ridx = row + row_d
             target_cidx = col + col_d
-            if target_ridx < 0 or target_ridx >= len(data) or target_cidx < 0 or target_cidx >= len(data[target_ridx]):
+            if (
+                target_ridx < 0
+                or target_ridx >= len(data)
+                or target_cidx < 0
+                or target_cidx >= len(data[target_ridx])
+            ):
                 continue
             char = data[target_ridx][target_cidx]
             if is_symbol(char):
@@ -89,8 +85,7 @@ def get_next_number(input_line: str, start_search_at: int) -> (str, int, int):
 
             # edge case: number is at the end of the line, so set end pos
             if cidx == len(input_line) - 1:
-                print("last thing edge case")
-                # note we add 1 here because this is the end of the line only
+                # note we add 1 here because this is the end of the line
                 end_col = cidx + 1
                 break
         else:
@@ -103,7 +98,7 @@ def get_next_number(input_line: str, start_search_at: int) -> (str, int, int):
     if start_col is not None:
         # edge case: number is at the end of the line, so set end pos
         if end_col is None:
-          end_col = start_col + 1
+            end_col = start_col + 1
         number = input_line[start_col:end_col]
         return number, start_col, end_col
 
@@ -124,12 +119,12 @@ def test_get_next_number():
     assert part_number is None
     assert start_col is None
     assert end_col is None
-    long_input_str = '.....510'
+    long_input_str = ".....510"
     part_number, start_col, end_col = get_next_number(long_input_str, 0)
     assert part_number == "510"
     assert start_col == 5
     assert end_col == 8
-    single_end_input_str = '.1.1'
+    single_end_input_str = ".1.1"
     part_number, start_col, end_col = get_next_number(single_end_input_str, 0)
     assert part_number == "1"
     assert start_col == 1
@@ -151,13 +146,15 @@ def part_one_solution(data):
         # find each number in the row and check if its a part number
         search_col = 0
         while search_col is not None:
-            number_str, start_col, end_col = get_next_number(line, search_col)
-            if number_str is not None and is_part_number(ridx, start_col, len(number_str), data):
+            number_str, start_col, next_search_col = get_next_number(line, search_col)
+            search_col = next_search_col
+            if number_str is not None and is_part_number(
+                ridx, start_col, len(number_str), data
+            ):
                 part_numbers.append(int(number_str))
                 print(f"part number {number_str} at pos {start_col}")
             else:
                 print(f"not a part number: {number_str}")
-            search_col = end_col
 
     return sum(part_numbers)
 
