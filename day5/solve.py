@@ -1,7 +1,6 @@
 import argparse
 from collections import namedtuple, defaultdict
 
-Node = namedtuple('Node', ['type', 'value', 'next'])
 
 TYPES = ["seed", "soil", "fertilizer", "water", "light", "temperature", "humidity", "location"]
 
@@ -28,57 +27,73 @@ def get_numbers(line) -> tuple[int, int, int]:
     return (int(dest_start_str), int(src_start_str), int(length_str))
 
 
-def build_nodes(data) -> dict[str, dict[int, Node]]:
-    nodes = defaultdict(dict)
+def organize_data(data) -> dict[str, list[tuple[int, int, int]]]:
+    """Given raw input lines of a file, return a dict of each section mapped to
+    the values (list of 3-tuples) for that section.
+    """
+    organized_data = defaultdict(list)
     idx = 0
     mode = None
 
     while idx < len(data):
         line = data[idx]
 
+        if line == '':  # skip blank lines
+            continue
+
         # change mode if we're passing a "mode line"
         if not line[0].isnumeric() and any(line.startswith(t) for t in TYPES):
             mode = line[:line.index('-')].strip()
 
-        # otherwise add nodes
+        # otherwise add the line to the current mode
         elif line[0].isnumeric():
             dest_start, src_start, length = get_numbers(line)
-            for i, _ in enumerate(range(src_start, src_start + length)):
-                value = src_start + i
-                new_node = Node(mode, value, dest_start + i)
-                nodes[mode][value] = new_node
+            organized_data[mode].append((dest_start, src_start, length))
 
         # next line
         idx += 1
 
-    return nodes
+    return organized_data
 
 
-def get_node(node_type, node_id, all_nodes):
-    node_type_dict = all_nodes[node_type]
-    if node_id in node_type_dict:
-        return node_type_dict[node_id]
-    else:
-        # items which are not mapped map to the next item of the same ID
-        return Node(node_type, node_id, node_id)
+def find_next_id(source_id, data) -> int:
+    """Follows a "node" along the path from seed to location.
+
+    Given a source ID and a set of data -- one block from the input file, for
+    example the seed-to-soil map (but not any other map) -- this function will
+    return the destination ID contained within the map.
+
+    Args:
+        source_id:  The ID of the source thing, e.g. seeds
+        data:  A list of 3-tuples from that category of inputs, e.g. the seed-to-soil map
+
+    Returns:
+        The ID of the destination thing, e.g. soil
+    """
+    for (dest_start, src_start, length) in data:
+        if source_id >= src_start and source_id <= src_start + length:
+            return dest_start + (source_id - src_start)
+    return source_id  # per the instructions, default to same ID
 
 
-def follow_nodes(node, all_nodes):
-    next_type = points_to(node.type)
-    if next_type:
-        next_node = get_node(next_type, node.next, all_nodes)
-        return follow_nodes(next_node, all_nodes)
-    return node.value
+def test_find_next_id():
+    data = read_input('test_input.txt')
+    data = organize_data(data[1:])
+    assert find_next_id(98, data['seed']) == 50
 
 
 def solution_one(data):
     seeds = get_seeds(data[0])
-    nodes = build_nodes(data[1:])
+    organized_data = organize_data(data[1:])
     locations = []
     for seed in seeds:
-        root = get_node('seed', seed, nodes)
-        location = follow_nodes(root, nodes)
-        locations.append(location)
+        last_id = seed
+        for i in range(0, len(TYPES)):
+            this_type = TYPES[i]
+            next_type = TYPES[i + 1] if i < len(TYPES) - 1 else None
+            if next_type is not None:
+                last_id = find_next_id(last_id, organized_data[this_type])
+        locations.append(last_id)
     return min(locations)
 
 
